@@ -7,11 +7,17 @@
 
 ## 🚀 초기 설정 도우미
 
-**트리거:** 사용자가 "초기 설정 도와줘", "설치 도와줘", "세팅 도와줘", "처음부터 같이 해줘",
-"setup" 등 설치/초기화를 요청하면 **아래 절차를 순서대로 진행**한다. (사람용 상세본: `SETUP.md`)
+**트리거:** 사용자가 "초기 설정 도와줘", "설치 도와줘", "설치해줘", "세팅 도와줘", "처음부터 같이 해줘",
+"setup", 또는 **GitHub 주소만 주며 "설치해줘"** 라고 하면 **아래 절차를 순서대로 진행**한다.
+(사람용 상세본: `SETUP.md`)
 
 ### 진행 원칙
 - **한 번에 한 단계.** 각 단계를 실행/안내하고, 결과를 확인한 뒤 다음으로 넘어간다. 한꺼번에 쏟아내지 않는다.
+- **OS 를 먼저 파악한다.** Windows 와 macOS 는 설치 명령이 다르다(`winget` vs Homebrew/설치파일, `copy` vs `cp`).
+  현재 OS 를 확인하고 그에 맞는 명령만 안내한다. 모르면 사용자에게 묻는다.
+- **OS 레벨 설치는 대화형일 수 있음을 인지한다.** git·Node 설치는 UAC(윈도우) 승인 클릭이나 설치 마법사(맥)가
+  뜰 수 있어 **클로드코드가 100% 무인 자동화할 수 없다.** 이 구간은 명령을 `!` 로 띄워 주고, 사용자가
+  팝업을 승인/완료하도록 또렷이 안내한 뒤 결과를 확인한다. 그 다음 단계(supabase CLI~)부터는 네가 자동 처리한다.
 - **대화형 명령은 사용자가 직접 실행**하게 한다 (브라우저 로그인, DB 비밀번호 입력 등). 이때
   프롬프트에 `! 명령어` 를 입력하면 이 세션에서 실행된다고 안내한다. 예: `! supabase login`
 - **비밀키**는 사용자가 채팅에 붙여넣으면 네가 `.env.local` 에 적어준다. 키 값을 채팅에 도로 출력하지 않는다.
@@ -22,11 +28,23 @@
 > **핵심 방침:** 대시보드에서 키를 손으로 복사하게 하지 않는다. **supabase CLI 로 로그인→프로젝트 생성→키 조회까지
 > 자동화**해서, 사용자는 브라우저 로그인과 DB 비밀번호 입력만 하면 되게 한다. 이것이 가장 빠른 설치 경로다.
 
-0. **사전 점검** — `node -v`(20 이상), `npm -v`, `supabase --version` 을 확인한다.
-   - Node 가 없거나 낮으면 https://nodejs.org LTS 설치를 안내.
-   - **supabase CLI 가 없으면 먼저 설치한다**: `npm install -g supabase` (또는 macOS `brew install supabase/tap/supabase`).
-     이 흐름은 CLI 로 프로젝트 생성·키 조회까지 자동화하므로 CLI 설치가 **필수**다.
-1. **패키지 설치** — `npm install` 을 실행한다.
+0. **환경 부트스트랩 (필수 프로그램 확인·설치)** — 윤비서 실행에 필요한 3가지: **git**(코드 받기),
+   **Node.js 20.9 이상 + npm**(빌드·실행), **supabase CLI**(DB). 먼저 한 번에 점검한다:
+   `git --version`, `node -v`, `npm -v`, `supabase --version`. 없는 것만 OS 에 맞춰 깐다.
+   - **Windows** (대부분 `winget` 사용 가능):
+     - git: `winget install --id Git.Git -e`
+     - Node LTS: `winget install --id OpenJS.NodeJS.LTS -e`  ← Node 가 npm·supabase CLI 의 전제
+     - (winget 자체가 없으면 https://nodejs.org LTS, https://git-scm.com 설치파일 안내)
+   - **macOS**:
+     - git: `git --version` 을 한 번 실행하면 Xcode Command Line Tools 설치창이 뜬다(또는 `xcode-select --install`).
+     - Node LTS: Homebrew 가 있으면 `brew install node`, 없으면 https://nodejs.org LTS 설치파일 안내.
+   - **supabase CLI** (git·Node 가 준비된 뒤): `npm install -g supabase` — **Windows/macOS 모두 동작**한다.
+     (macOS 는 `brew install supabase/tap/supabase` 도 가능.) 이 흐름은 CLI 로 프로젝트 생성·키 조회까지
+     자동화하므로 CLI 설치가 **필수**다.
+   - git·Node 설치는 승인 팝업/마법사가 뜰 수 있다 → `!` 로 명령을 띄우고 사용자가 완료하게 한 뒤 버전을 재확인한다.
+1. **코드 받기 (URL 만 받은 경우)** — 사용자가 폴더를 안 열고 GitHub 주소만 줬다면 먼저 클론한다:
+   `git clone https://github.com/youn-yong-seung/yunbiseo-template.git my-secretary` 후 그 폴더로 이동한다.
+   이미 이 폴더가 열려 있으면(= `package.json` 이 보이면) 이 단계는 건너뛴다. 이어서 `npm install` 을 실행한다.
 2. **Supabase 로그인 (사용자가 직접 실행)** — `! supabase login` 을 `!` 로 직접 실행하도록 안내한다.
    브라우저가 열려 인증하면 토큰이 자동 저장된다. (대시보드 접속·키 복사 불필요)
 3. **프로젝트 준비** — 로그인 후 네가 직접 명령으로 처리한다. 두 갈래 중 하나:

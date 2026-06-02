@@ -20,14 +20,22 @@
 
 ## 0. 미리 준비할 것
 
-- **Node.js 20 이상** — https://nodejs.org 에서 LTS 설치
-- **Supabase 계정** (무료) — https://supabase.com
-- **Supabase CLI** — 설치:
-  ```bash
-  npm install -g supabase
-  # 또는 macOS: brew install supabase/tap/supabase
-  ```
+윤비서 실행에 필요한 프로그램은 **3가지**입니다. 없으면 아래대로 설치하세요.
+(이 폴더를 **Claude Code 로 열고 "설치해줘"** 라고 하면 OS 를 보고 대신 깔아 줍니다.)
+
+| 필요한 것 | Windows | macOS |
+|-----------|---------|-------|
+| **git** (코드 받기) | `winget install --id Git.Git -e` | `git --version` 실행 → 설치창 뜨면 진행 (또는 `xcode-select --install`) |
+| **Node.js 20.9+** (빌드·실행) | `winget install --id OpenJS.NodeJS.LTS -e` | Homebrew: `brew install node` / 없으면 [nodejs.org](https://nodejs.org) LTS |
+| **Supabase CLI** (DB) | `npm install -g supabase` | `npm install -g supabase` (또는 `brew install supabase/tap/supabase`) |
+
+- `winget` 이 없으면(구형 Windows) [nodejs.org](https://nodejs.org)·[git-scm.com](https://git-scm.com) 에서 설치파일로 받으세요.
+- Supabase CLI 는 **Node 설치 후** 깔립니다(`npm` 이 필요). Windows/macOS 모두 `npm install -g supabase` 로 됩니다.
+- **Supabase 계정** (무료) — https://supabase.com (로그인은 아래 2장에서 CLI 가 브라우저로 처리)
 - (선택) **Vercel 계정** — 나중에 인터넷에 배포하고 싶을 때
+
+> 💡 git·Node 설치는 승인 팝업(Windows UAC)이나 설치 마법사가 뜰 수 있어 **클릭 한두 번은 직접** 해야 합니다.
+> 그 다음(Supabase CLI~)부터는 Claude Code 가 알아서 진행합니다.
 
 ---
 
@@ -57,8 +65,8 @@ supabase login
 supabase orgs list
 
 # 3) 새 프로젝트 생성 — 비밀번호는 직접 정하고 꼭 메모하세요. 한국이면 리전은 ap-northeast-2 권장
-supabase projects create "yun-secretary" \
-  --org-id <조직-id> --db-password <원하는-DB비밀번호> --region ap-northeast-2
+#    (한 줄로 입력하세요 — Windows/맥 모두 동일)
+supabase projects create "yun-secretary" --org-id <조직-id> --db-password <원하는-DB비밀번호> --region ap-northeast-2
 
 # 4) 생성된 project ref 확인 (REFERENCE ID 열)
 supabase projects list
