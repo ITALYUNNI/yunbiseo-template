@@ -4,9 +4,14 @@
 클래스101 「클로드코드 4주 과정」 수강생이 클론해서 로컬에서 실행하고,
 각자 본인 시스템으로 발전시키도록 만들어졌습니다.
 
-> **시작하기:** 이 폴더를 **Claude Code 로 열고 "초기 설정 도와줘"** 라고 말하면
-> 처음부터 끝까지 같이 설치해 줍니다. (또는 `/setup` 입력)
-> 직접 하려면 → **[SETUP.md](./SETUP.md)**.
+> **시작하기 (처음이라면):** 아래 한 줄로 코드를 내려받은 뒤, 그 폴더를
+> **Claude Code 로 열고 "초기 설정 도와줘"** 라고 말하면 처음부터 끝까지 같이 설치해 줍니다.
+> (또는 `/setup` 입력) · 직접 하려면 → **[SETUP.md](./SETUP.md)**.
+>
+> ```bash
+> git clone https://github.com/youn-yong-seung/yunbiseo-template.git my-secretary
+> cd my-secretary
+> ```
 
 ## 기술 스택
 

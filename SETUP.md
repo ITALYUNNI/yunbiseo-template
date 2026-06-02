@@ -35,7 +35,7 @@
 
 ```bash
 # (이미 클론했다면 생략)
-git clone <이-템플릿-저장소-주소> my-secretary
+git clone https://github.com/youn-yong-seung/yunbiseo-template.git my-secretary
 cd my-secretary
 
 npm install
