@@ -46,6 +46,10 @@ yarn-error.log*
 # omc
 .omc/
 
+# supabase CLI 로컬 캐시 (링크 정보 등 — 커밋 금지)
+supabase/.temp
+supabase/.branches
+
 # vercel
 .vercel
 
