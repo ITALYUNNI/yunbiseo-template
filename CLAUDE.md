@@ -19,22 +19,33 @@
 - 진행 상황을 짧게 요약해 사용자가 지금 어디쯤인지 알게 한다.
 
 ### 단계
+> **핵심 방침:** 대시보드에서 키를 손으로 복사하게 하지 않는다. **supabase CLI 로 로그인→프로젝트 생성→키 조회까지
+> 자동화**해서, 사용자는 브라우저 로그인과 DB 비밀번호 입력만 하면 되게 한다. 이것이 가장 빠른 설치 경로다.
+
 0. **사전 점검** — `node -v`(20 이상), `npm -v`, `supabase --version` 을 확인한다.
    - Node 가 없거나 낮으면 https://nodejs.org LTS 설치를 안내.
-   - supabase CLI 가 없으면 `npm install -g supabase` (또는 `brew install supabase/tap/supabase`) 안내.
+   - **supabase CLI 가 없으면 먼저 설치한다**: `npm install -g supabase` (또는 macOS `brew install supabase/tap/supabase`).
+     이 흐름은 CLI 로 프로젝트 생성·키 조회까지 자동화하므로 CLI 설치가 **필수**다.
 1. **패키지 설치** — `npm install` 을 실행한다.
-2. **Supabase 프로젝트 만들기** — 사용자에게 https://supabase.com/dashboard 에서 **New project** 생성을 안내한다.
-   생성 후 **Project Settings → API** 에서 다음 3개를 채팅에 붙여넣어 달라고 요청한다:
-   `Project URL`, `anon public key`, `service_role key`.
-   (service_role 은 비밀값이니 외부 공유 금지임을 알린다.)
-3. **`.env.local` 작성** — `cp .env.example .env.local` 후, 받은 값으로 `NEXT_PUBLIC_SUPABASE_URL`,
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` 를 채운다.
-   `NEXT_PUBLIC_AUTH_EMAIL_DOMAIN` 은 기본값(example.com) 그대로 둔다.
-4. **Supabase 연결 (사용자가 직접 실행)** — 다음을 `!` 로 직접 실행하도록 안내한다:
-   - `! supabase login` (브라우저 인증)
-   - project ref 를 물어본 뒤 `! supabase link --project-ref <ref>` (DB 비밀번호 입력 필요)
-5. **DB 생성** — `supabase db push` 를 실행한다(네가 실행 가능). 테이블/정책이 생성된다.
-   - 권한/연결 오류면 4단계(login/link)를 다시 확인한다.
+2. **Supabase 로그인 (사용자가 직접 실행)** — `! supabase login` 을 `!` 로 직접 실행하도록 안내한다.
+   브라우저가 열려 인증하면 토큰이 자동 저장된다. (대시보드 접속·키 복사 불필요)
+3. **프로젝트 준비** — 로그인 후 네가 직접 명령으로 처리한다. 두 갈래 중 하나:
+   - **새로 만들기:** `supabase orgs list -o json` 으로 조직 ID(`id`)를 확인하고(여러 개면 사용자가 고르게 한다),
+     사용자에게 **DB 비밀번호**(직접 정함·메모 필수)와 **리전**(한국이면 `ap-northeast-2` 권장)을 물은 뒤,
+     비밀번호가 채팅/로그에 남지 않도록 **사용자가 `!` 로 직접** 실행하게 한다:
+     `! supabase projects create "yun-secretary" --org-id <org> --db-password <비밀번호> --region ap-northeast-2`
+   - **기존 프로젝트 사용:** `supabase projects list -o json` 결과를 보여주고 쓸 프로젝트를 고르게 한다.
+   - 어느 쪽이든 결과에서 **project ref**(`<ref>`)를 확보한다. 새 프로젝트는 준비에 1~2분 걸릴 수 있다.
+4. **키 자동 조회 & `.env.local` 작성** — 네가 직접 처리한다(사용자가 키를 복사할 필요 없음):
+   - `supabase projects api-keys --project-ref <ref> -o json` 으로 `anon` 과 `service_role` 키를 받는다.
+   - `cp .env.example .env.local` 후 다음을 채운다: `NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co`,
+     `NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon>`, `SUPABASE_SERVICE_ROLE_KEY=<service_role>`.
+     `NEXT_PUBLIC_AUTH_EMAIL_DOMAIN` 은 기본값(example.com) 유지.
+   - service_role 은 비밀값이므로 채팅에 키 값을 다시 출력하지 않는다.
+5. **연결 & DB 생성** —
+   - `! supabase link --project-ref <ref>` 를 사용자가 `!` 로 직접 실행한다(3단계 DB 비밀번호 입력).
+   - 이어서 `supabase db push` 를 실행한다(네가 실행 가능). 테이블/정책이 생성된다.
+   - `project not ready`/연결 오류면 프로젝트 준비(1~2분)를 기다렸다가, 또는 login/link 를 재확인 후 재시도한다.
 6. **첫 관리자 생성** — `npm run setup:admin` 을 실행하고, 출력된 **로그인 ID 와 비밀번호**를
    사용자에게 또렷하게 전달한다. (기본 ID: `admin`)
 7. **실행 & 로그인** — `npm run dev` 를 백그라운드로 띄우고, http://localhost:3000 에서
@@ -43,8 +54,10 @@
    `SETUP.md` 6장 또는 [시스템설정] 화면에서 나중에 켤 수 있다고 알린다.
 
 ### 자주 나는 문제
-- `supabase db push` 권한/연결 오류 → `supabase login` + `supabase link --project-ref` 재확인.
-- `npm run build` 실패 → `.env.local` 의 Supabase 값이 채워졌는지 확인 (빌드에 필요).
+- `supabase projects create`/`api-keys` 가 인증 오류 → `! supabase login` 을 먼저 했는지 확인.
+- `supabase db push` 가 `project not ready`/연결 오류 → 새 프로젝트 준비(1~2분)를 기다린 뒤,
+  `supabase link --project-ref <ref>` (DB 비밀번호) 를 재확인하고 재시도.
+- `npm run build` 실패 → `.env.local` 의 Supabase 값(URL/anon/service_role)이 채워졌는지 확인 (빌드에 필요).
 - 로그인 안 됨 → `npm run setup:admin` 재실행으로 비밀번호 재확인.
 
 ---

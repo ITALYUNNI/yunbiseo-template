@@ -29,9 +29,11 @@
 
 ```bash
 npm install
-cp .env.example .env.local      # Supabase 키 입력
-supabase login && supabase link --project-ref <ref>
-supabase db push                # 테이블 생성
+supabase login                  # 브라우저 인증 (대시보드 키 복사 불필요)
+supabase projects create "yun-secretary" --org-id <org> --db-password <pw> --region ap-northeast-2
+cp .env.example .env.local
+supabase projects api-keys --project-ref <ref>   # anon/service_role 키를 .env.local 에 기입
+supabase link --project-ref <ref> && supabase db push   # 테이블 생성
 npm run setup:admin             # 첫 관리자 계정 생성
 npm run dev                     # http://localhost:3000
 ```

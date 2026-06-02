@@ -43,38 +43,51 @@ npm install
 
 ---
 
-## 2. Supabase 프로젝트 만들기 & 키 넣기
+## 2. Supabase 로그인 & 프로젝트 만들기 (CLI 로 한 번에)
 
-1. https://supabase.com/dashboard 에서 **New project** 로 새 프로젝트를 만듭니다.
-   - 데이터베이스 비밀번호는 메모해두세요.
-2. 프로젝트가 만들어지면 **Project Settings → API** 로 가서 아래 3개 값을 복사합니다.
-   - `Project URL`
-   - `anon` `public` key
-   - `service_role` key (🔒 비밀값 — 외부에 공유 금지)
-3. 환경변수 파일을 만듭니다.
-   ```bash
-   cp .env.example .env.local
-   ```
-4. `.env.local` 을 열어 복사한 값을 붙여넣습니다.
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-   SUPABASE_SERVICE_ROLE_KEY=eyJ...
-   NEXT_PUBLIC_AUTH_EMAIL_DOMAIN=example.com
-   ```
+> 대시보드에서 키를 손으로 복사할 필요 없습니다. **CLI 로 로그인 → 프로젝트 생성 → 키 조회**까지
+> 끝냅니다. 가장 쉬운 길은 이 폴더를 **Claude Code 로 열고 "초기 설정 도와줘"** 라고 하는 것 —
+> Claude 가 아래를 대신 처리하고 `.env.local` 까지 채워 줍니다. 직접 한다면:
+
+```bash
+# 1) 로그인 (브라우저가 열려 인증합니다)
+supabase login
+
+# 2) 내 조직 ID 확인 (id 값을 복사)
+supabase orgs list
+
+# 3) 새 프로젝트 생성 — 비밀번호는 직접 정하고 꼭 메모하세요. 한국이면 리전은 ap-northeast-2 권장
+supabase projects create "yun-secretary" \
+  --org-id <조직-id> --db-password <원하는-DB비밀번호> --region ap-northeast-2
+
+# 4) 생성된 project ref 확인 (REFERENCE ID 열)
+supabase projects list
+```
+
+> 새 프로젝트는 준비에 **1~2분** 걸릴 수 있습니다.
+> (이미 쓰던 프로젝트가 있으면 3번을 건너뛰고 4번에서 ref 만 골라도 됩니다.)
 
 ---
 
-## 3. 데이터베이스 만들기 (마이그레이션 적용)
+## 3. 키 조회 & DB 만들기
 
 ```bash
-# Supabase 로그인 (브라우저가 열립니다)
-supabase login
+# 1) 환경변수 파일 만들기
+cp .env.example .env.local
 
-# 내 프로젝트와 연결 (ref 는 대시보드 주소 또는 Project Settings 에 있음)
+# 2) anon / service_role 키 조회 (대시보드 복사 불필요)
+supabase projects api-keys --project-ref <내-project-ref>
+
+# 3) .env.local 을 열어 아래처럼 채웁니다 (URL 은 https://<ref>.supabase.co)
+#    NEXT_PUBLIC_SUPABASE_URL=https://<내-project-ref>.supabase.co
+#    NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon 키>
+#    SUPABASE_SERVICE_ROLE_KEY=<service_role 키>   # 🔒 비밀값 — 외부 공유 금지
+#    NEXT_PUBLIC_AUTH_EMAIL_DOMAIN=example.com      # 기본값 그대로
+
+# 4) 내 프로젝트와 연결 (2단계에서 정한 DB 비밀번호 입력)
 supabase link --project-ref <내-project-ref>
 
-# 테이블/정책 생성 (한 번만 실행하면 끝)
+# 5) 테이블/정책 생성 (한 번만 실행하면 끝)
 supabase db push
 ```
 
