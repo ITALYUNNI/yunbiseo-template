@@ -62,12 +62,15 @@
    - service_role 은 비밀값이므로 채팅에 키 값을 다시 출력하지 않는다.
 5. **연결 & DB 생성** —
    - `! supabase link --project-ref <ref>` 를 사용자가 `!` 로 직접 실행한다(3단계 DB 비밀번호 입력).
-   - 이어서 `supabase db push` 를 실행한다(네가 실행 가능). 테이블/정책이 생성된다.
+   - 이어서 `supabase db push --yes` 를 실행한다(네가 실행 가능, `--yes` 로 확인 프롬프트 자동 통과).
+     테이블/정책 51개가 생성된다.
    - `project not ready`/연결 오류면 프로젝트 준비(1~2분)를 기다렸다가, 또는 login/link 를 재확인 후 재시도한다.
-6. **첫 관리자 생성** — `npm run setup:admin` 을 실행하고, 출력된 **로그인 ID 와 비밀번호**를
-   사용자에게 또렷하게 전달한다. (기본 ID: `admin`)
-7. **실행 & 로그인** — `npm run dev` 를 백그라운드로 띄우고, http://localhost:3000 에서
-   6단계의 ID/비밀번호로 로그인하라고 안내한다.
+6. **첫 관리자 생성** — 이 앱은 **회원가입 화면이 없다.** 로그인 계정은 이 단계로 만드는 관리자 1개로 시작한다.
+   비밀번호를 결정적으로 만들기 위해 **ID·비밀번호를 직접 지정**해 실행한다(비밀번호는 **6자 이상**):
+   `npm run setup:admin -- admin <비밀번호>`. 실행 후 **로그인 ID(`admin`)와 비밀번호**를 또렷하게 전달한다.
+   (직원 추가는 로그인 후 [직원관리] 화면에서 한다고 안내한다.)
+7. **실행 & 로그인** — `npm run dev` 를 백그라운드로 띄우고, http://localhost:3000 에서 로그인하라고 안내한다.
+   로그인은 **이메일이 아니라 ID(`admin`)** 와 6단계 비밀번호로 한다는 점을 분명히 알린다.
 8. **완료** — 축하 인사와 함께, 회사정보·외부연동(Gemini/Bolta/Slack)은 **선택(심화)** 이며
    `SETUP.md` 6장 또는 [시스템설정] 화면에서 나중에 켤 수 있다고 알린다.
 
@@ -76,7 +79,8 @@
 - `supabase db push` 가 `project not ready`/연결 오류 → 새 프로젝트 준비(1~2분)를 기다린 뒤,
   `supabase link --project-ref <ref>` (DB 비밀번호) 를 재확인하고 재시도.
 - `npm run build` 실패 → `.env.local` 의 Supabase 값(URL/anon/service_role)이 채워졌는지 확인 (빌드에 필요).
-- 로그인 안 됨 → `npm run setup:admin` 재실행으로 비밀번호 재확인.
+- `setup:admin` 이 비밀번호 길이 오류 → 비밀번호는 **6자 이상**이어야 한다(Supabase Auth 기본 정책).
+- 로그인 안 됨 → ① 이메일이 아니라 **ID(`admin`)** 로 시도했는지 확인, ② `npm run setup:admin -- admin <새비밀번호>` 로 재설정.
 
 ---
 
