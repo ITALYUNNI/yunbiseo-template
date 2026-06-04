@@ -120,6 +120,7 @@ supabase projects api-keys --project-ref <내-project-ref>
 NEXT_PUBLIC_SUPABASE_URL=https://<내-project-ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon 키>
 SUPABASE_SERVICE_ROLE_KEY=<service_role 키>     # 🔒 비밀값 — 외부 공유 금지
+SUPABASE_DB_PASSWORD=<2단계에서 정한 DB 비밀번호>   # 🔒 재연결용 기록(앱은 사용 안 함)
 NEXT_PUBLIC_AUTH_EMAIL_DOMAIN=example.com         # 기본값 그대로 두면 됩니다
 ```
 
