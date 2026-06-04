@@ -15,6 +15,7 @@ import { sendLog } from "@/lib/log-client";
 import { uploadFileToDrive } from "@/lib/drive-upload";
 import { createClient } from "@/lib/supabase/client";
 import { CUSTOMERS_DRIVE_ROOT_FOLDER_ID } from "@/lib/customers/drive";
+import { DRIVE_ENABLED } from "@/lib/drive-config";
 import type { CustomerType } from "@/lib/types";
 
 const CUSTOMER_TYPE_OPTIONS: Array<{ value: CustomerType | "none"; label: string }> = [
@@ -138,9 +139,9 @@ export default function NewCustomerPage() {
     // 모바일 안정성: 세션 워밍업 (memory: project_supabase_session_warmup)
     await supabase.auth.getSession();
 
-    // 1. Drive 폴더 먼저 생성 (실패해도 고객 등록은 진행)
+    // 1. Drive 폴더 먼저 생성 (연동 활성 시에만, 실패해도 고객 등록은 진행)
     let driveFolderId: string | null = null;
-    try {
+    if (DRIVE_ENABLED) try {
       const folderRes = await fetch("/api/drive/folder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

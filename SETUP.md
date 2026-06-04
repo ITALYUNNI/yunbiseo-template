@@ -209,7 +209,8 @@ npm run dev
 | 세금계산서 발행 | Bolta API Key | 시스템설정 화면 |
 | Slack 알림 | Slack Bot Token | 시스템설정 화면 |
 | 회사 정보(견적서·재직증명서) | 직접 입력 | `src/lib/quotation-constants.ts`, `src/app/dashboard/certificates/page.tsx` |
-| Google 캘린더/드라이브 | OAuth/서비스계정 키 | `.env.local` (기본 비활성) |
+| **Google Drive 폴더 자동생성**(고객/프로젝트) | 서비스 계정 + 폴더 공유 | **[docs/GOOGLE_DRIVE_SETUP.md](./docs/GOOGLE_DRIVE_SETUP.md)** (기본 비활성) |
+| Google 캘린더 | OAuth/서비스계정 키 | `.env.local` (기본 비활성) |
 | Vercel 배포 | Vercel 계정 | `vercel` CLI 또는 대시보드 |
 
 > 회사 정보(상호/대표자/사업자번호/계좌 등)는 기본적으로 비어 있습니다.

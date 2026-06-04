@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CUSTOMERS_DRIVE_ROOT_FOLDER_ID } from "@/lib/customers/drive";
+import { DRIVE_ENABLED } from "@/lib/drive-config";
 import { sendLog } from "@/lib/log-client";
 import { createClient } from "@/lib/supabase/client";
 import type { CustomerType } from "@/lib/types";
@@ -80,7 +81,7 @@ export function CustomerCreateDialog({
     await supabase.auth.getSession();
 
     let driveFolderId: string | null = null;
-    try {
+    if (DRIVE_ENABLED) try {
       const folderRes = await fetch("/api/drive/folder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

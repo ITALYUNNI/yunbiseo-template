@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FolderKanban, PlayCircle, Plus, Search, UsersRound, Wallet } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { DRIVE_ENABLED } from "@/lib/drive-config";
 
 import { EmployeeFilter, type FilterMode } from "@/components/calendar/employee-filter";
 import { ErrorState, LoadingState, PageHeader, PageShell, PageToolbar, StatCard, StatsGrid } from "@/components/page-shell";
@@ -319,7 +320,7 @@ export default function ProjectsPage() {
     const projectNumber = await generateProjectNumber();
 
     let driveFolderId: string | null = null;
-    try {
+    if (DRIVE_ENABLED) try {
       // 유형별 폴더를 parent로 사용. type_id가 있으면 유형 폴더 해석이 반드시 성공해야 한다.
       // 실패 시 조용히 루트(_프로젝트)로 fallback 되던 버그 때문에 과거 일부 프로젝트가 루트에 생성됐음.
       let parentId: string | undefined;

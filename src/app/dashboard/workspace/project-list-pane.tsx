@@ -3,6 +3,7 @@
 import { Building2, FolderKanban, Plus, Search, UserPlus, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { DRIVE_ENABLED } from "@/lib/drive-config";
 
 import { ProjectDialog } from "@/components/project-dialog";
 import { Button } from "@/components/ui/button";
@@ -201,7 +202,7 @@ export function ProjectListPane({
     const projectNumber = await generateProjectNumber(supabase);
 
     let driveFolderId: string | null = null;
-    try {
+    if (DRIVE_ENABLED) try {
       let parentId: string | undefined;
       if (cleaned.type_id) {
         const typeFolderRes = await fetch("/api/drive/type-folder", {
