@@ -404,6 +404,12 @@ export async function getSlackSettings() {
   };
 }
 
+// Slack 봇 토큰이 설정돼 있는지(=연동 활성) 확인. 미설정이면 알림을 조용히 건너뛰는 데 쓴다.
+export async function isSlackConfigured(): Promise<boolean> {
+  const { botToken } = await getSlackSettings();
+  return Boolean(botToken);
+}
+
 export async function addSlackReaction({
   channel,
   timestamp,

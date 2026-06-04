@@ -205,21 +205,30 @@ npm run dev
 
 ## 6. (선택) 외부 연동 켜기 — "심화"
 
-아래 기능들은 키가 없어도 앱은 잘 돌아갑니다. 필요할 때만 설정하세요.
-대부분 **[시스템설정]** 화면에서 키를 입력하면 됩니다.
+**핵심 메뉴(고객·프로젝트·할일·일정·매출·매입·영업이익분석·직원관리 등)는 외부 연동 없이도 잘 돌아갑니다.**
+아래는 *있으면 더 좋은* 연동이며, 필요할 때만 켜세요. 대부분 **[시스템설정]** 화면에서 키를 입력합니다.
 
-| 기능 | 필요한 것 | 어디서 설정 |
-|------|-----------|-------------|
-| 명함관리 OCR / 입금 AI매칭 / AI견적 | Google Gemini API Key | 시스템설정 화면 |
-| 세금계산서 발행 | Bolta API Key | 시스템설정 화면 |
-| Slack 알림 | Slack Bot Token | 시스템설정 화면 |
-| 회사 정보(견적서·재직증명서) | 직접 입력 | `src/lib/quotation-constants.ts`, `src/app/dashboard/certificates/page.tsx` |
-| **Google Drive 폴더 자동생성**(고객/프로젝트) | 서비스 계정 + 폴더 공유 | **[docs/GOOGLE_DRIVE_SETUP.md](./docs/GOOGLE_DRIVE_SETUP.md)** (기본 비활성) |
-| Google 캘린더 | OAuth/서비스계정 키 | `.env.local` (기본 비활성) |
-| Vercel 배포 | Vercel 계정 | `vercel` CLI 또는 대시보드 |
+| 연동 | 켜면 되는 기능 | 필요한 것 | 어디서 설정 |
+|------|----------------|-----------|-------------|
+| **Google Gemini** | 명함 OCR · 입금 AI매칭 · 미팅 자동매칭 | Gemini API Key | 시스템설정 화면 |
+| **Anthropic Claude** | AI 견적 생성 · 미팅 매칭(보조) | `ANTHROPIC_API_KEY` | ⚠️ **`.env.local` 에만** (시스템설정에 입력란 없음) |
+| **Bolta** | 세금계산서 발행(매출 상세) | Bolta API Key | 시스템설정 화면 |
+| **Slack** | 프로젝트/할일/매입/입금/일정 알림 | Slack Bot Token | 시스템설정 화면 |
+| **Google Drive** | 고객/프로젝트/명함/자료실 파일·폴더 | 서비스 계정 + 폴더 공유 | **[docs/GOOGLE_DRIVE_SETUP.md](./docs/GOOGLE_DRIVE_SETUP.md)** |
+| **Gmail/Google 캘린더** | 메일·캘린더 연동 | Google OAuth 클라이언트 | `.env.local`(`GOOGLE_OAUTH_*`) |
+| **Vercel 배포 + Cron** | 인터넷 배포 · Slack 일정 알림/반복매입 자동생성 | Vercel + `CRON_SECRET` | `vercel` CLI / 대시보드 |
 
-> 회사 정보(상호/대표자/사업자번호/계좌 등)는 기본적으로 비어 있습니다.
-> 견적서·재직증명서에서 본인 회사 정보를 쓰려면 위 파일에서 값을 바꾸세요.
+### ⚠️ 학생 환경에서 "데이터가 없어 비어 보이는" 메뉴 (정상입니다)
+아래는 **외부 자동 유입**을 전제로 설계돼서, 연동 전에는 화면이 비어 있는 게 정상입니다. 강의에서 참고하세요.
+
+- **카드사용내역 / 법인카드** — 카드 SMS를 휴대폰 포워더(Tasker 등)가 `웹훅`으로 보내야 채워집니다. 수동 추가 UI는 없습니다.
+- **반복 매입** — 템플릿 등록은 되지만, 실제 매입 자동생성은 **Vercel Cron**(`generate-recurring-expenses`)이 돌아야 합니다.
+- **미팅 자동 전사/요약·입금 자동매칭** — 외부 녹취/은행 웹훅 + AI 키가 있어야 자동화됩니다(수동 입력은 가능).
+
+### 회사 정보(견적서 · 재직증명서)
+상호/대표자/사업자번호/계좌 등은 **기본적으로 비어 있습니다(개인정보 미포함).** 본인 회사 정보로 채우려면:
+- 견적서 공급자/계좌: `src/lib/quotation-constants.ts`
+- 재직증명서 회사정보: `src/app/dashboard/certificates/page.tsx`
 
 ---
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { createFolder } from "@/lib/google-drive";
+import { DRIVE_ENABLED } from "@/lib/drive-config";
 import { logInfo } from "@/lib/logger";
 import { RESOURCE_LIBRARY_DRIVE_FOLDER_ID } from "@/lib/resource-library";
 import { createRouteAuthErrorResponse, requireRouteUser } from "@/lib/route-auth";
@@ -63,14 +64,22 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     const authorName = employee?.name ?? user.user_metadata?.name ?? user.email ?? "이름 없음";
-    const driveFolder = await createFolder(buildFolderName(title), RESOURCE_LIBRARY_DRIVE_FOLDER_ID);
+    // Drive 연동이 켜진 경우에만 폴더 생성. 미설정이면 글만 저장(텍스트 자료실은 그대로 동작).
+    let driveFolder: Awaited<ReturnType<typeof createFolder>> | null = null;
+    if (DRIVE_ENABLED) {
+      try {
+        driveFolder = await createFolder(buildFolderName(title), RESOURCE_LIBRARY_DRIVE_FOLDER_ID);
+      } catch (e) {
+        console.error("자료실 Drive 폴더 생성 건너뜀:", e instanceof Error ? e.message : String(e));
+      }
+    }
 
     const { data, error } = await supabase
       .from("resource_library_posts")
       .insert({
         title,
         content,
-        drive_folder_id: driveFolder.id ?? null,
+        drive_folder_id: driveFolder?.id ?? null,
         author_employee_id: employee?.id ?? null,
         author_name: authorName,
       })
@@ -84,7 +93,7 @@ export async function POST(request: NextRequest) {
     logInfo("CREATE_RESOURCE_LIBRARY_POST", `자료 등록: ${data.id}`, {
       resource: "resource_library_post",
       resource_id: data.id,
-      details: { drive_folder_id: driveFolder.id ?? null },
+      details: { drive_folder_id: driveFolder?.id ?? null },
     });
 
     return NextResponse.json(data, { status: 201 });

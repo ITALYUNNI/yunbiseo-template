@@ -28,7 +28,7 @@ type ProjectCandidate = {
 };
 type LeadCandidate = { id: string; company_name: string; contact_name: string; status: string };
 
-const GEMINI_MODEL = "gemini-3.1-flash-lite-preview";
+const GEMINI_MODEL = "gemini-2.5-flash-lite";
 const CLAUDE_FALLBACK_MODEL = "claude-haiku-4-5-20251001";
 
 function buildPrompts(

@@ -1,6 +1,6 @@
 import { createRouteAuthErrorResponse, requireRouteUser } from "@/lib/route-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendTaskSlackNotification } from "@/lib/slack";
+import { isSlackConfigured, sendTaskSlackNotification } from "@/lib/slack";
 
 function asTrimmed(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -19,6 +19,11 @@ export async function POST(request: Request) {
 
   if (!taskId || !newStatus) {
     return Response.json({ error: "task_id and new_status are required" }, { status: 400 });
+  }
+
+  // Slack 미연동이면 조용히 건너뛴다(경고 토스트 방지).
+  if (!(await isSlackConfigured())) {
+    return Response.json({ skipped: true });
   }
 
   let actorName: string | null = null;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { uploadBusinessCardImage } from "@/lib/business-card-drive";
+import { DRIVE_ENABLED } from "@/lib/drive-config";
 import { logError, logInfo } from "@/lib/logger";
 import { asNullableFormattedKoreanPhoneNumber } from "@/lib/phone";
 import { createRouteAuthErrorResponse, requireRouteUser } from "@/lib/route-auth";
@@ -159,20 +160,25 @@ export async function POST(request: NextRequest) {
     let driveWebViewLink: string | null = null;
     let driveWebContentLink: string | null = null;
 
-    if (shouldUploadImage) {
+    // Drive 연동이 켜진 경우에만 이미지 업로드. 미설정이면 이미지 없이 명함만 저장(저장 실패 방지).
+    if (shouldUploadImage && DRIVE_ENABLED) {
       const imageName = payload.image_name as string;
       const imageMimeType = payload.image_mime_type as string;
       const imageBase64 = payload.image_base64 as string;
 
-      const uploadedFile = await uploadBusinessCardImage({
-        fileName: imageName,
-        mimeType: imageMimeType,
-        base64Data: imageBase64,
-      });
+      try {
+        const uploadedFile = await uploadBusinessCardImage({
+          fileName: imageName,
+          mimeType: imageMimeType,
+          base64Data: imageBase64,
+        });
 
-      driveFileId = uploadedFile.id ?? null;
-      driveWebViewLink = uploadedFile.webViewLink ?? null;
-      driveWebContentLink = uploadedFile.webContentLink ?? null;
+        driveFileId = uploadedFile.id ?? null;
+        driveWebViewLink = uploadedFile.webViewLink ?? null;
+        driveWebContentLink = uploadedFile.webContentLink ?? null;
+      } catch (e) {
+        console.error("명함 이미지 Drive 업로드 건너뜀:", e instanceof Error ? e.message : String(e));
+      }
     }
 
     const { data, error } = await supabase

@@ -1,5 +1,5 @@
 import { createRouteAuthErrorResponse, requireRouteUser } from "@/lib/route-auth";
-import { sendProjectCreatedSlackMessage } from "@/lib/slack";
+import { isSlackConfigured, sendProjectCreatedSlackMessage } from "@/lib/slack";
 
 function asTrimmedString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -17,6 +17,11 @@ export async function POST(request: Request) {
 
   if (!projectNumber || !projectName) {
     return Response.json({ error: "project_number and project_name are required" }, { status: 400 });
+  }
+
+  // Slack 미연동(토큰 없음)이면 알림을 조용히 건너뛴다(경고 토스트 방지).
+  if (!(await isSlackConfigured())) {
+    return Response.json({ skipped: true });
   }
 
   try {
