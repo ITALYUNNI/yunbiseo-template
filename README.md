@@ -34,9 +34,11 @@ supabase projects create "yun-secretary" --org-id <org> --db-password <pw> --reg
 cp .env.example .env.local
 supabase projects api-keys --project-ref <ref>   # anon/service_role 키를 .env.local 에 기입
 supabase link --project-ref <ref> && supabase db push   # 테이블 생성
-npm run setup:admin             # 첫 관리자 계정 생성
-npm run dev                     # http://localhost:3000
+npm run setup:admin             # 기본 관리자 계정 생성 → admin / jadong!
+npm run dev                     # http://localhost:3000  (admin / jadong! 로 로그인)
 ```
+
+> 로그인 후 **사이드바 하단 '내 이름' → 마이페이지**에서 비밀번호를 꼭 바꾸세요.
 
 자세한 내용은 **[SETUP.md](./SETUP.md)** 참고.
 

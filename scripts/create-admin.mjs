@@ -8,8 +8,11 @@
 // 실행 후 출력되는 [로그인 ID]와 [비밀번호]로 로그인하세요.
 
 import { readFileSync } from "node:fs";
-import { randomBytes } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
+
+// 강의/학습용 기본 관리자 계정 (외우기 쉽게 고정). 로그인 후 마이페이지에서 꼭 변경하세요.
+const DEFAULT_LOGIN_ID = "admin";
+const DEFAULT_PASSWORD = "jadong!"; // 6자 이상(Supabase Auth 최소 정책) 충족
 
 // .env.local 을 직접 읽어 환경변수로 로드 (Node 버전 무관)
 function loadEnvFile(path) {
@@ -50,12 +53,9 @@ if (!url || !serviceKey) {
   process.exit(1);
 }
 
-const loginId = (process.argv[2] || process.env.ADMIN_LOGIN_ID || "admin").trim();
+const loginId = (process.argv[2] || process.env.ADMIN_LOGIN_ID || DEFAULT_LOGIN_ID).trim();
 const name = (process.env.ADMIN_NAME || "관리자").trim();
-let password = process.argv[3] || process.env.ADMIN_PASSWORD || "";
-if (!password) {
-  password = "Admin-" + randomBytes(5).toString("hex"); // 자동 생성
-}
+const password = process.argv[3] || process.env.ADMIN_PASSWORD || DEFAULT_PASSWORD;
 const email = loginId.includes("@") ? loginId : `${loginId}@${domain}`;
 
 const supabase = createClient(url, serviceKey, {
@@ -129,11 +129,12 @@ async function main() {
   }
 
   console.log("\n========================================");
-  console.log("  관리자 계정 준비 완료!");
-  console.log("  로그인 ID : " + loginId);
-  console.log("  비밀번호  : " + password);
+  console.log("  🔑 관리자 계정 준비 완료!");
+  console.log("  👤 로그인 ID : " + loginId);
+  console.log("  🔒 비밀번호  : " + password);
   console.log("========================================");
-  console.log("\n이제 `npm run dev` 후 위 정보로 로그인하세요.\n");
+  console.log("\n이제 `npm run dev` 후 위 정보로 로그인하세요.");
+  console.log("👉 로그인 후 왼쪽 사이드바 맨 아래 '내 이름'을 눌러 마이페이지에서 비밀번호를 꼭 변경하세요.\n");
 }
 
 main().catch((err) => {
