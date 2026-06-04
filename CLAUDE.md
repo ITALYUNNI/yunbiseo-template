@@ -20,12 +20,19 @@
   팝업을 승인/완료하도록 또렷이 안내한 뒤 결과를 확인한다. 그 다음 단계(supabase CLI~)부터는 네가 자동 처리한다.
 - **⚠️ 새로 설치한 명령은 현재 세션에서 바로 안 잡힌다(특히 Windows).** winget/npm 등으로 git·Node·supabase CLI 를
   방금 깔면 **이미 떠 있는 터미널·Claude Code 세션은 PATH 가 갱신되지 않아** 같은 창에서 `! supabase ...` 하면
-  `command not found`/`...은(는) 인식되지 않습니다` 가 난다. 이때 **계속 `!` 로 재시도하지 말고** 아래를 안내한다:
-  1. (권장) **VS Code(또는 터미널)를 완전히 종료 후 다시 켜고** `claude` 를 재실행한 뒤 **"이어서 설치해줘"** 라고 하면
-     PATH 가 갱신돼 그대로 이어진다. — 어디까지 됐는지는 `git/node/supabase --version` 으로 점검해 판단한다.
-  2. (빠른 우회) **새 cmd(또는 PowerShell) 창을 직접 열어** 거기서 그 명령(`supabase login` 등)을 실행하게 한다.
-     새 창은 갱신된 PATH 를 읽으므로 바로 동작한다.
-  설치 직후에는 항상 `--version` 으로 인식 여부를 확인하고, 안 잡히면 위 안내를 먼저 한다.
+  `command not found`/`...은(는) 인식되지 않습니다` 가 난다. **계속 `!` 로 재시도하지 말고**, 사용자를 번거롭게 하지
+  않는 순서로 아래를 시도한다:
+  1. **(1순위 — 풀패스 실행) 설치된 supabase 바이너리의 전체 경로를 네가 찾아서** 그 경로로 명령을 만들어 준다.
+     PATH 가 갱신 안 돼도 절대경로면 바로 실행된다. 찾는 법:
+     - 전역 prefix 확인: `npm prefix -g` (npm 은 보통 같은 세션에서 동작한다). 결과를 `<P>` 라 하면 —
+     - **Windows:** 바이너리는 `<P>\supabase.cmd` (예: `C:\Users\<id>\AppData\Roaming\npm\supabase.cmd`)
+     - **macOS/Linux:** 바이너리는 `<P>/bin/supabase`
+     - `"<풀패스>" --version` 으로 인식되는지 먼저 확인한 뒤, 이후 **모든 supabase 명령에 이 풀패스를 사용**한다.
+       비대화형(`projects list/api-keys/db push`)은 네가 풀패스로 직접 실행하고, 사용자가 직접 해야 하는
+       대화형은 풀패스가 박힌 명령을 그대로 제시한다. 예(Windows): `! "C:\Users\<id>\AppData\Roaming\npm\supabase.cmd" login`
+  2. **(2순위 — 재시작)** 풀패스도 여의치 않으면 **VS Code/터미널을 완전히 종료 후 다시 켜고** `claude` 재실행 →
+     **"이어서 설치해줘"** 로 이어간다(진행 위치는 `--version` 들로 점검). 새 cmd 창에서 직접 실행도 가능하다.
+  설치 직후에는 항상 `--version`(또는 풀패스 `--version`)으로 인식 여부를 확인하고, 안 잡히면 위 순서로 처리한다.
 - **대화형 명령은 사용자가 직접 실행**하게 한다 (브라우저 로그인, DB 비밀번호 입력 등). 이때
   프롬프트에 `! 명령어` 를 입력하면 이 세션에서 실행된다고 안내한다. 예: `! supabase login`
 - **비밀키**는 사용자가 채팅에 붙여넣으면 네가 `.env.local` 에 적어준다. 키 값을 채팅에 도로 출력하지 않는다.
@@ -51,9 +58,9 @@
      자동화하므로 CLI 설치가 **필수**다.
    - git·Node 설치는 승인 팝업/마법사가 뜰 수 있다 → `!` 로 명령을 띄우고 사용자가 완료하게 한 뒤 버전을 재확인한다.
    - **설치 직후 `--version` 으로 인식되는지 꼭 확인한다.** Windows 에서 방금 깐 명령이 `command not found`/
-     `인식되지 않습니다` 로 안 잡히면 PATH 미갱신 문제다(위 진행 원칙 ⚠️ 참고) → 같은 창에서 재시도하지 말고
-     **VS Code/터미널 종료 후 재시작 → `claude` 재실행 → "이어서 설치해줘"** 를 안내하거나, 새 cmd 창에서 실행하게 한다.
-     여러 개를 새로 깔았다면 **마지막에 한 번만** 재시작하도록 묶어서 안내해 번거로움을 줄인다.
+     `인식되지 않습니다` 로 안 잡히면 PATH 미갱신 문제다(위 진행 원칙 ⚠️ 참고). **1순위는 풀패스 실행** —
+     `npm prefix -g` 로 prefix 를 구해 `<P>\supabase.cmd`(Windows)/`<P>/bin/supabase`(mac) 를 만들어 그 절대경로로
+     실행하면 재시작 없이 바로 된다. 안 되면 그때 VS Code/터미널 재시작 → `claude` 재실행 → "이어서 설치해줘" 로 잇는다.
 1. **코드 받기 (URL 만 받은 경우)** — 사용자가 폴더를 안 열고 GitHub 주소만 줬다면 먼저 클론한다:
    `git clone https://github.com/youn-yong-seung/yunbiseo-template.git my-secretary` 후 그 폴더로 이동한다.
    이미 이 폴더가 열려 있으면(= `package.json` 이 보이면) 이 단계는 건너뛴다. 이어서 `npm install` 을 실행한다.
@@ -88,8 +95,9 @@
 
 ### 자주 나는 문제
 - **`supabase`/`node`/`git` 이 방금 설치했는데 `command not found`/`인식되지 않습니다`(특히 Windows)** →
-  현재 세션 PATH 미갱신 문제다. 같은 창에서 재시도하지 말고 **VS Code/터미널을 껐다 켜고 `claude` 재실행 후
-  "이어서 설치해줘"**, 또는 **새 cmd 창**에서 그 명령을 실행한다.
+  현재 세션 PATH 미갱신 문제다. **1순위: 풀패스 실행** — `npm prefix -g` 로 prefix 를 구해
+  `<prefix>\supabase.cmd`(Windows)/`<prefix>/bin/supabase`(mac) 절대경로로 실행하면 재시작 없이 바로 된다.
+  안 되면 VS Code/터미널 재시작 후 `claude` 재실행 → "이어서 설치해줘", 또는 새 cmd 창에서 실행.
 - `supabase projects create`/`api-keys` 가 인증 오류 → `! supabase login` 을 먼저 했는지 확인.
 - `supabase db push` 가 `project not ready`/연결 오류 → 새 프로젝트 준비(1~2분)를 기다린 뒤,
   `supabase link --project-ref <ref>` (DB 비밀번호) 를 재확인하고 재시도.
