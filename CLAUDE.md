@@ -25,13 +25,18 @@
   1. 네가 `npm prefix -g` 를 실행해 prefix 를 알아낸다(npm 은 보통 같은 세션에서 동작한다).
   2. supabase 풀패스를 만든다 — **Windows:** `<prefix>\supabase.cmd`, **macOS/Linux:** `<prefix>/bin/supabase`.
   3. 네가 `"<풀패스>" --version` 으로 실제로 실행되는지 확인한다.
-  4. 그 다음 **실제 경로가 박힌 한 줄 명령을 사용자에게 그대로 제시**해 붙여넣게 한다. 예(Windows):
-     ``! "C:\Users\실제계정\AppData\Roaming\npm\supabase.cmd" login`` ← `<prefix>` 를 실측값으로 채워서 준다.
-  5. 이후 **비대화형 supabase 명령(`projects list`/`api-keys`/`db push` 등)은 네가 그 풀패스로 직접 실행**하고,
-     사용자가 직접 해야 하는 것(`login`, DB 비밀번호 들어가는 `link`/`create`)만 풀패스 박힌 명령으로 건넨다.
+  4. 이후 **비대화형 supabase 명령(`projects list`/`api-keys`/`db push`/`link` 등)은 네가 그 풀패스로 직접 실행**한다.
+     예: `"C:\Users\실제계정\AppData\Roaming\npm\supabase.cmd" projects list -o json` (경로는 실측값으로).
+  - **단, `supabase login` 은 예외(아래 ⚠️ 참고) — 풀패스로 `!` 에 넣지 말 것.** 그건 브라우저가 안 열리고 토큰 모드로 빠진다.
   - (풀패스로도 안 되는 예외 상황에서만) VS Code/터미널 재시작 → `claude` 재실행 → "이어서 설치해줘" 를 폴백으로 안내한다.
-- **대화형 명령은 사용자가 직접 실행**하게 한다 (브라우저 로그인, DB 비밀번호 입력 등). 이때
-  프롬프트에 `! 명령어` 를 입력하면 이 세션에서 실행된다고 안내한다. 예: `! supabase login`
+- **⚠️ `supabase login` 은 반드시 사용자가 "새/일반 터미널"에서 직접 실행한다 — `!` 로 시키지 않는다.**
+  `login` 은 브라우저를 여는 **대화형** 명령인데, Claude Code 의 `!`(비대화형/에이전트 환경)에서 실행하면 CLI 가 이를 감지해
+  **브라우저 대신 "액세스 토큰을 입력하라"** 는 모드로 빠진다(초보자가 여기서 막힘). 그래서 로그인은 이렇게 안내한다:
+  **"새 터미널(또는 cmd)을 열고 `supabase login` 을 직접 실행하세요 — 브라우저가 열려 인증됩니다."**
+  (새 터미널은 PATH 도 갱신돼 있어 `supabase` 가 바로 잡힌다.) 인증이 끝나면 토큰이 저장되어, 이후 비대화형 명령은
+  네가 같은 머신에서 풀패스로 이어서 처리할 수 있다.
+- **그 밖의 대화형 입력**(DB 비밀번호 등)도 사용자가 직접 실행하게 한다. `! 명령어` 는 이 세션에서 실행되지만,
+  **브라우저·대화형 프롬프트가 필요한 명령(특히 `login`)은 `!` 가 아니라 사용자의 실제 터미널**에서 돌려야 한다.
 - **비밀키**는 사용자가 채팅에 붙여넣으면 네가 `.env.local` 에 적어준다. 키 값을 채팅에 도로 출력하지 않는다.
 - **에러가 나면** 메시지를 그대로 읽고, 원인과 해결책을 한국어로 쉽게 설명한 뒤 다시 시도한다.
 - 진행 상황을 짧게 요약해 사용자가 지금 어디쯤인지 알게 한다.
@@ -56,13 +61,15 @@
    - git·Node 설치는 승인 팝업/마법사가 뜰 수 있다 → `!` 로 명령을 띄우고 사용자가 완료하게 한 뒤 버전을 재확인한다.
    - **설치 직후 `--version` 으로 인식되는지 꼭 확인한다.** Windows 에서 방금 깐 supabase 가 `command not found`/
      `인식되지 않습니다` 로 안 잡히면 PATH 미갱신 문제다 → **재시작 시키지 말고, 네가 `npm prefix -g` 로 경로를 찾아
-     `<prefix>\supabase.cmd` 풀패스로 직접 실행하고, 사용자에겐 실제 경로가 박힌 `! "...\supabase.cmd" login` 을
-     그대로 제시**한다(위 진행 원칙 ⚠️ 의 절차를 따른다). 재시작은 풀패스도 안 될 때의 폴백이다.
+     `<prefix>\supabase.cmd` 풀패스로 비대화형 명령(`--version`/`projects list` 등)을 직접 실행**한다(위 진행 원칙 ⚠️ 절차).
+     단 **`login` 은 풀패스 `!` 로 하지 말고** 사용자가 새 터미널에서 `supabase login` 을 직접 실행하게 한다(브라우저 필요).
 1. **코드 받기 (URL 만 받은 경우)** — 사용자가 폴더를 안 열고 GitHub 주소만 줬다면 먼저 클론한다:
    `git clone https://github.com/youn-yong-seung/yunbiseo-template.git my-secretary` 후 그 폴더로 이동한다.
    이미 이 폴더가 열려 있으면(= `package.json` 이 보이면) 이 단계는 건너뛴다. 이어서 `npm install` 을 실행한다.
-2. **Supabase 로그인 (사용자가 직접 실행)** — `! supabase login` 을 `!` 로 직접 실행하도록 안내한다.
-   브라우저가 열려 인증하면 토큰이 자동 저장된다. (대시보드 접속·키 복사 불필요)
+2. **Supabase 로그인 (사용자가 새 터미널에서 직접)** — **`!` 로 시키지 말고**, 사용자에게
+   **"새 터미널(또는 cmd)을 열어 `supabase login` 을 직접 실행"** 하라고 안내한다. 브라우저가 열려 인증하면
+   토큰이 자동 저장된다(대시보드 접속·키 복사 불필요). ⚠️ `! supabase login`(비대화형)으로 하면 브라우저 대신
+   토큰 입력 모드로 빠져 막히므로 쓰지 않는다. 인증 완료 후(네가 `supabase projects list` 풀패스 등으로 확인) 다음 단계로.
 3. **프로젝트 준비** — 로그인 후 네가 직접 명령으로 처리한다. 두 갈래 중 하나:
    - **새로 만들기(기본):** **DB 비밀번호는 사용자에게 묻지 말고 네가 강력하게 생성한다.**
      `node -e "console.log(require('crypto').randomBytes(18).toString('hex'))"` 같은 방식으로 특수문자 없는
@@ -97,10 +104,12 @@
 
 ### 자주 나는 문제
 - **`supabase` 가 방금 설치했는데 `command not found`/`인식되지 않습니다`(특히 Windows)** →
-  현재 세션 PATH 미갱신 문제다. **재시작 시키지 말고 네가 경로를 찾아 완성된 명령을 건넨다:** `npm prefix -g` 실행 →
-  `<prefix>\supabase.cmd`(Windows)/`<prefix>/bin/supabase`(mac) 풀패스 완성 → `"<풀패스>" --version` 로 확인 →
-  사용자에겐 실제 경로가 박힌 `! "...\supabase.cmd" login` 을 그대로 제시. 재시작은 폴백.
-- `supabase projects create`/`api-keys` 가 인증 오류 → `! supabase login` 을 먼저 했는지 확인.
+  현재 세션 PATH 미갱신 문제다. **재시작 시키지 말고 네가 경로를 찾아 비대화형 명령은 풀패스로 직접 실행:**
+  `npm prefix -g` → `<prefix>\supabase.cmd`(Windows)/`<prefix>/bin/supabase`(mac) → `"<풀패스>" --version` 확인 →
+  이후 `projects list`/`api-keys`/`db push` 등은 풀패스로 네가 실행. (단 `login` 은 풀패스 `!` 로 하지 말 것 — 아래 항목)
+- **`supabase login` 했더니 브라우저 대신 "토큰을 입력하라"고 나옴** → `login` 을 비대화형(`!`/풀패스 `!`)에서 돌려서다.
+  **사용자가 새 터미널(또는 cmd)을 열어 `supabase login` 을 직접 실행**하게 하면 브라우저가 열린다(새 터미널은 PATH 도 해결).
+- `supabase projects create`/`api-keys` 가 인증 오류 → 사용자가 **새 터미널에서 `supabase login`** 을 먼저 했는지 확인.
 - `supabase db push` 가 `project not ready`/연결 오류 → 새 프로젝트 준비(1~2분)를 기다린 뒤,
   `supabase link --project-ref <ref>` (DB 비밀번호) 를 재확인하고 재시도.
 - `npm run build` 실패 → `.env.local` 의 Supabase 값(URL/anon/service_role)이 채워졌는지 확인 (빌드에 필요).
