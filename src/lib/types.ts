@@ -934,3 +934,20 @@ export interface Note {
 
 export type NoteInsert = Omit<Note, "id" | "created_at" | "updated_at" | "projects" | "customers">;
 export type NoteUpdate = Partial<Omit<NoteInsert, "author_employee_id" | "author_name">>;
+
+export interface ImportDeclaration {
+  id: string;
+  title: string;
+  declaration_date: string;
+  declaration_number: string | null;
+  file_url: string | null;
+  file_name: string | null;
+  file_size: number | null;
+  memo: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ImportDeclarationInsert = Omit<ImportDeclaration, "id" | "created_at" | "updated_at">;
+export type ImportDeclarationUpdate = Partial<Omit<ImportDeclarationInsert, "created_by">>;
