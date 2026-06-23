@@ -11,8 +11,6 @@
 
 const { chromium } = require('C:/Users/home/AppData/Roaming/npm/node_modules/playwright');
 const XLSX    = require('C:/Users/home/AppData/Roaming/npm/node_modules/xlsx');
-const https   = require('https');
-const http    = require('http');
 const fs      = require('fs');
 const path    = require('path');
 
@@ -76,58 +74,93 @@ function delay(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
 
-function fetchUrl(url) {
-  return new Promise((resolve, reject) => {
-    const lib = url.startsWith('https') ? https : http;
-    lib.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, res => {
-      let data = '';
-      res.on('data', d => { data += d; });
-      res.on('end', () => resolve(data));
-    }).on('error', reject);
-  });
-}
+// ─── 환율 조회 (Playwright → 네이버 고시환율 "송금 보낼 때") ─────────────────
+async function getEurKrwRate(context) {
+  console.log('💱 EUR/KRW 고시환율 (송금 보낼 때) 조회 중...');
+  console.log('   출처: https://m.stock.naver.com/marketindex/exchange/FX_EURKRW');
 
-// ─── 환율 조회 ────────────────────────────────────────────────────────────────
-async function getEurKrwRate() {
-  console.log('💱 EUR/KRW 고시환율 조회 중...');
-
-  // 1순위: 하나은행 API (송금보낼때 환율)
+  const page = await context.newPage();
   try {
-    const body = await fetchUrl('https://api.hanabank.com/api/product/exchangeList?currCd=EUR');
-    const json = JSON.parse(body);
-    const rate = json?.data?.[0]?.sellExchangeRate || json?.data?.[0]?.ttvSell;
-    if (rate && rate > 100) {
-      console.log(`  하나은행 송금환율: ${rate}`);
-      return parseFloat(rate);
-    }
-  } catch {}
+    // Naver 내부 API 응답 가로채기
+    let intercepted = null;
+    page.on('response', async (res) => {
+      const url = res.url();
+      if (url.includes('FX_EURKRW') && url.includes('api')) {
+        try {
+          const json = await res.json().catch(() => null);
+          if (!json) return;
+          // 네이버 API 필드 후보 (송금보낼때: ttvSell, ttsSell, remittanceSell 등)
+          const val =
+            json?.ttvSell      ||
+            json?.ttsSell      ||
+            json?.remittanceSell ||
+            json?.data?.ttvSell ||
+            json?.closePrice   ||
+            json?.price        ||
+            json?.basePrice;
+          if (val) {
+            const n = parseFloat(String(val).replace(/,/g, ''));
+            if (n > 100) intercepted = n;
+          }
+        } catch {}
+      }
+    });
 
-  // 2순위: 네이버 금융 API
-  try {
-    const body = await fetchUrl('https://api.stock.naver.com/api/exchange/FX_EURKRW');
-    const json = JSON.parse(body);
-    const rate = json?.closePrice || json?.price;
-    if (rate && rate > 100) {
-      console.log(`  네이버 환율: ${rate}`);
-      return parseFloat(String(rate).replace(',', ''));
-    }
-  } catch {}
+    await page.goto(
+      'https://m.stock.naver.com/marketindex/exchange/FX_EURKRW',
+      { waitUntil: 'networkidle', timeout: 30_000 }
+    );
+    await delay(1500);
 
-  // 3순위: exchangerate-api (국제 스팟, 참고용)
-  try {
-    const body = await fetchUrl('https://api.exchangerate-api.com/v4/latest/EUR');
-    const json = JSON.parse(body);
-    const rate = json?.rates?.KRW;
-    if (rate && rate > 100) {
-      console.log(`  ExchangeRate-API: ${rate} (스팟, 고시환율 아님)`);
-      return parseFloat(rate);
+    // API 인터셉트 성공 시 바로 반환
+    if (intercepted) {
+      console.log(`  ✅ 네이버 API 환율: ${intercepted}원`);
+      return intercepted;
     }
-  } catch {}
 
-  // 폴백: 수동 입력 안내
-  const fallback = 1550;
-  console.warn(`  ⚠ 환율 자동 조회 실패 → 기본값 ${fallback} 사용 (직접 수정 필요)`);
-  return fallback;
+    // DOM에서 "송금 보낼 때" 값 추출
+    const rate = await page.evaluate(() => {
+      // 방법 1: dt/dd 쌍에서 "송금 보낼 때" 레이블 탐색
+      const dts = Array.from(document.querySelectorAll('dt, th, span, div, p'));
+      for (const el of dts) {
+        const txt = el.textContent.trim();
+        if (txt === '송금 보낼 때' || txt === '송금보낼때') {
+          // 같은 레벨의 다음 형제 또는 dd
+          const sibling = el.nextElementSibling;
+          if (sibling) {
+            const num = parseFloat(sibling.textContent.replace(/[^\d.]/g, ''));
+            if (num > 100) return num;
+          }
+          // 부모의 다음 형제
+          const parentSibling = el.parentElement?.nextElementSibling;
+          if (parentSibling) {
+            const num = parseFloat(parentSibling.textContent.replace(/[^\d.]/g, ''));
+            if (num > 100) return num;
+          }
+        }
+      }
+
+      // 방법 2: 페이지 텍스트에서 1000~2000 범위 숫자 패턴 추출
+      const text = document.body.innerText;
+      const matches = text.match(/1[,\s]?\d{3}(?:[.,]\d{1,2})?/g);
+      if (matches) {
+        const nums = matches
+          .map(m => parseFloat(m.replace(/[,\s]/g, '')))
+          .filter(n => n > 1000 && n < 2000);
+        if (nums.length) return nums[0];
+      }
+      return null;
+    });
+
+    if (rate) {
+      console.log(`  ✅ 네이버 DOM 환율: ${rate}원`);
+      return rate;
+    }
+
+    throw new Error('네이버 페이지에서 환율을 찾지 못했습니다.');
+  } finally {
+    await page.close().catch(() => {});
+  }
 }
 
 // ─── xlsb 로드 ────────────────────────────────────────────────────────────────
@@ -382,15 +415,25 @@ async function main() {
   // 리포트 폴더 생성
   if (!fs.existsSync(REPORT_DIR)) fs.mkdirSync(REPORT_DIR, { recursive: true });
 
-  // 1. 환율 조회
-  const rate = await getEurKrwRate();
-  console.log(`  EUR/KRW: ${fmt(rate)}원`);
+  // 1. 브라우저 먼저 띄우기 (환율 + 크림 스크래핑 공용)
+  const browser = await chromium.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-blink-features=AutomationControlled'],
+  });
+  const context = await browser.newContext({
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+    viewport: { width: 1280, height: 800 },
+  });
 
-  // 2. xlsb 로드
+  // 2. 환율 조회 (네이버 고시환율 "송금 보낼 때")
+  const rate = await getEurKrwRate(context);
+  console.log(`  ➜ 적용 환율: ${fmt(rate)}원/EUR\n`);
+
+  // 3. xlsb 로드
   const xlsbPath = findLatestXlsb();
   const { productMap, kreamMap } = loadXlsbData(xlsbPath);
 
-  // 3. 조인: kreamId → product 정보 + 원가
+  // 4. 조인: kreamId → product 정보 + 원가
   const targets = [];
   for (const [kreamId, kreamInfo] of kreamMap.entries()) {
     const prod = productMap.get(kreamInfo.supplierModel);
@@ -413,25 +456,15 @@ async function main() {
   }
 
   console.log(`\n🎯 원가 계산 완료: ${targets.length}개 대상`);
-  console.log(`   예시 원가 분포:`);
   const buckets = [0, 50000, 100000, 200000, 500000];
   for (let i = 0; i < buckets.length - 1; i++) {
     const cnt = targets.filter(t => t.wonKa >= buckets[i] && t.wonKa < buckets[i+1]).length;
     console.log(`   ${fmt(buckets[i])}~${fmt(buckets[i+1])}원: ${cnt}개`);
   }
-  const cnt500 = targets.filter(t => t.wonKa >= 500000).length;
-  console.log(`   500,000원+: ${cnt500}개`);
+  console.log(`   500,000원+: ${targets.filter(t => t.wonKa >= 500000).length}개`);
 
-  // 4. 크림 가격 조회
+  // 5. 크림 최근거래가 조회
   console.log(`\n🔍 크림 최근거래가 조회 시작...`);
-  const browser = await chromium.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-blink-features=AutomationControlled'],
-  });
-  const context = await browser.newContext({
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-    viewport: { width: 1280, height: 800 },
-  });
 
   const hits = [];
 
